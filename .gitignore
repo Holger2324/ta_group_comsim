@@ -1,0 +1,8 @@
+/.bundle
+
+*~
+*.swp
+*.swo
+*.!sync
+*.!sync.SyncTemp
+connect_prod_db.rb
