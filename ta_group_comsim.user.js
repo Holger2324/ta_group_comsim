@@ -26,9 +26,11 @@ comsim_old_url = "";
 
 function report_combat_sim(target, source, outcome, duration, total, base, defense, cy, df, cc, rt, base_rt, infantry_rt, vehicle_rt, aircraft_rt) {
     setTimeout(function() {
-        url = "http://ta-group-comsim.herokuapp.com/comsims/report/" + target + "/" + source + "?outcome=" + outcome + "&duration=" + duration + "&total=" + total + "&base=" + base + "&defense=" + defense + "&cy=" + cy + "&df=" + df + "&cc=" + cc + "&rt=" + rt + "&base_rt=" + base_rt + "&infantry_rt=" + infantry_rt + "&vehicle_rt=" + vehicle_rt + "&aircraft_rt=" + aircraft_rt;
+        url = "http://ta-group-comsim.herokuapp.com/comsims/report/" + target + "/" + source + "?outcome=" + outcome + "&total=" + total + "&base=" + base + "&defense=" + defense + "&cy=" + cy + "&df=" + df + "&cc=" + cc + "&infantry_rt=" + infantry_rt + "&vehicle_rt=" + vehicle_rt + "&aircraft_rt=" + aircraft_rt;
         if(comsim_old_url != url) {
             comsim_old_url = url;
+            url += "&rt=" + rt + "&base_rt=" + base_rt;
+            url += "&duration=" + duration;
             GM_xmlhttpRequest({
                 method: "GET",
                 synchronous: true,
