@@ -51,7 +51,53 @@ function get_combat_sims(target, source) {
                 synchronous: true,
                 url: "http://ta-group-comsim.herokuapp.com/comsims/get/" + target + "/" + source,
                 onload: function(response) {
-                    console.log(JSON.parse(response.responseText));
+                    result = JSON.parse(response.responseText);
+                    simulator = Simulator.StatWindow.getInstance();
+                    
+                    if(result.length + simulator.simSelected + 1 > simulator.simViews) {
+                        Simulator.OptionWindow.getInstance()._redrawSimViews(result.length + simulator.simSelected + 1);
+                    }
+
+                    for(var i = 0; i < result.length; i++) {
+                        sim = simulator.simSelected + i + 1;
+                        
+                        switch (result[i].outcome) {
+                            case "1":
+                                simulator.sim[sim].Label.Battle.Outcome.resetLabel();
+                                simulator.sim[sim].Label.Battle.Outcome.set({ show: "icon" });
+                                simulator.sim[sim].Label.Battle.Outcome.setIcon("FactionUI/icons/icon_reports_total_defeat.png");
+                                break;
+                            case "2":
+                                simulator.sim[sim].Label.Battle.Outcome.resetLabel();
+                                simulator.sim[sim].Label.Battle.Outcome.set({ show: "icon" });
+                                simulator.sim[sim].Label.Battle.Outcome.setIcon("FactionUI/icons/icon_reports_victory.png");
+                                break;
+                            case "3":
+                                simulator.sim[sim].Label.Battle.Outcome.resetLabel();
+                                simulator.sim[sim].Label.Battle.Outcome.set({ show: "icon" });
+                                simulator.sim[sim].Label.Battle.Outcome.setIcon("FactionUI/icons/icon_reports_total_victory.png");
+                                break;
+                        }
+                        simulator.sim[sim].Label.Battle.Duration.setValue(result[i].duration);
+                        simulator.sim[sim].Label.Battle.OwnCity.setValue(result[i].source);
+                        simulator.sim[sim].Label.EnemyHealth.Overall.setValue(result[i].total + "%");
+                        simulator.sim[sim].setEHLabelColor(simulator.sim[sim].Label.EnemyHealth.Overall, result[i].total);
+                        simulator.sim[sim].Label.EnemyHealth.Base.setValue(result[i].base + "%");
+                        simulator.sim[sim].setEHLabelColor(simulator.sim[sim].Label.EnemyHealth.Base, result[i].base);
+                        simulator.sim[sim].Label.EnemyHealth.Defense.setValue(result[i].defense + "%");
+                        simulator.sim[sim].setEHLabelColor(simulator.sim[sim].Label.EnemyHealth.Defense, result[i].defense);
+                        simulator.sim[sim].Label.EnemyHealth.CY.setValue(result[i].cy + "%");
+                        simulator.sim[sim].setEHLabelColor(simulator.sim[sim].Label.EnemyHealth.CY, result[i].cy);
+                        simulator.sim[sim].Label.EnemyHealth.DF.setValue(result[i].df + "%");
+                        simulator.sim[sim].setEHLabelColor(simulator.sim[sim].Label.EnemyHealth.DF, result[i].df);
+                        simulator.sim[sim].Label.EnemyHealth.CC.setValue(result[i].cc + "%");
+                        simulator.sim[sim].setEHLabelColor(simulator.sim[sim].Label.EnemyHealth.CC, result[i].cc);
+                        simulator.sim[sim].Label.Repair.Storage.setValue(result[i].rt);
+                        simulator.sim[sim].Label.Repair.Overall.setValue(result[i].base_rt);
+                        simulator.sim[sim].Label.Repair.Inf.setValue(result[i].infantry_rt);
+                        simulator.sim[sim].Label.Repair.Vehi.setValue(result[i].vehicle_rt);
+                        simulator.sim[sim].Label.Repair.Air.setValue(result[i].aircraft_rt);
+                    }
                 }
             });
         }
@@ -1057,28 +1103,27 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                                 this.Result = [];
                                 for (var i = 0; i < data.length; i++) this.Result.push(data[i].Value);
                             };
+                            this.setRTLabelColor = function (label, number) {
+                                if (number < 25) label.setTextColor("red");
+                                else if (number < 75) label.setTextColor("orangered");
+                                    else label.setTextColor("darkgreen");
+                            };
+                            this.setEHLabelColor = function (label, number) {
+                                if (number < 25) label.setTextColor("darkgreen");
+                                else if (number < 75) label.setTextColor("orangered");
+                                    else label.setTextColor("red");
+                            };
                             this.UpdateLabels = function () {
                                 var qxApp = qx.core.Init.getApplication();
                                 var formatTime = function (time) {
                                     return phe.cnc.Util.getTimespanString(time);
                                 };
-                                var setRTLabelColor = function (label, number) {
-                                    if (number < 25) label.setTextColor("red");
-                                    else if (number < 75) label.setTextColor("orangered");
-                                    else label.setTextColor("darkgreen");
-                                };
-                                var setEHLabelColor = function (label, number) {
-                                    if (number < 25) label.setTextColor("darkgreen");
-                                    else if (number < 75) label.setTextColor("orangered");
-                                    else label.setTextColor("red");
-                                };
 
                                 if (simulated) {
                                     
                                     get_combat_sims(this.TargetCity.get_Id(), this.OwnCity.get_Name());
+                                    
                                     //Battle.Outcome
-                                    this.simSelected = 2;
-
                                     switch (this.Stats.Battle.Outcome) {
                                     case 1:
                                         this.Label.Battle.Outcome.resetLabel();
@@ -1151,17 +1196,17 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                                         break;
                                     }
                                     //EnemyHealth.Overall
-                                    setEHLabelColor(this.Label.EnemyHealth.Overall, this.Stats.EnemyHealth.Overall.getHP());
+                                    this.setEHLabelColor(this.Label.EnemyHealth.Overall, this.Stats.EnemyHealth.Overall.getHP());
                                     //EnemyHealth.Base
-                                    setEHLabelColor(this.Label.EnemyHealth.Base, this.Stats.EnemyHealth.Base.getHP());
+                                    this.setEHLabelColor(this.Label.EnemyHealth.Base, this.Stats.EnemyHealth.Base.getHP());
                                     //EnemyHealth.Defense
-                                    setEHLabelColor(this.Label.EnemyHealth.Defense, this.Stats.EnemyHealth.Defense.getHP());
+                                    this.setEHLabelColor(this.Label.EnemyHealth.Defense, this.Stats.EnemyHealth.Defense.getHP());
                                     //EnemyHealth.CY
-                                    setEHLabelColor(this.Label.EnemyHealth.CY, this.Stats.EnemyHealth.CY.getHP());
+                                    this.setEHLabelColor(this.Label.EnemyHealth.CY, this.Stats.EnemyHealth.CY.getHP());
                                     //EnemyHealth.DF
-                                    setEHLabelColor(this.Label.EnemyHealth.DF, this.Stats.EnemyHealth.DF.getHP());
+                                    this.setEHLabelColor(this.Label.EnemyHealth.DF, this.Stats.EnemyHealth.DF.getHP());
                                     //EnemyHealth.CC
-                                    setEHLabelColor(this.Label.EnemyHealth.CC, this.Stats.EnemyHealth.CC.getHP());
+                                    this.setEHLabelColor(this.Label.EnemyHealth.CC, this.Stats.EnemyHealth.CC.getHP());
 
                                     //Repair.Storage
                                     if (this.OwnCity != null) this.Stats.Repair.Storage = Math.min(this.OwnCity.GetResourceCount(ClientLib.Base.EResourceType.RepairChargeInf), this.OwnCity.GetResourceCount(ClientLib.Base.EResourceType.RepairChargeVeh), this.OwnCity.GetResourceCount(ClientLib.Base.EResourceType.RepairChargeAir));
@@ -1228,15 +1273,15 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                                     }
 
                                     //Repair.Overall
-                                    setRTLabelColor(this.Label.Repair.Overall, this.Stats.Repair.Overall.getHP());
+                                    this.setRTLabelColor(this.Label.Repair.Overall, this.Stats.Repair.Overall.getHP());
                                     //Repair.Inf
-                                    setRTLabelColor(this.Label.Repair.Inf, this.Stats.Repair.Inf.getHP());
+                                    this.setRTLabelColor(this.Label.Repair.Inf, this.Stats.Repair.Inf.getHP());
                                     if (this.Stats.Repair.Inf.RT === this.Stats.Repair.Overall.RT && this.Stats.Repair.Inf.getHP() < 100) this.Label.Repair.Inf.setTextColor("black");
                                     //Repair.Vehi
-                                    setRTLabelColor(this.Label.Repair.Vehi, this.Stats.Repair.Vehi.getHP());
+                                    this.setRTLabelColor(this.Label.Repair.Vehi, this.Stats.Repair.Vehi.getHP());
                                     if (this.Stats.Repair.Vehi.RT === this.Stats.Repair.Overall.RT && this.Stats.Repair.Vehi.getHP() < 100) this.Label.Repair.Vehi.setTextColor("black");
                                     //Repair.Air
-                                    setRTLabelColor(this.Label.Repair.Air, this.Stats.Repair.Air.getHP());
+                                    this.setRTLabelColor(this.Label.Repair.Air, this.Stats.Repair.Air.getHP());
                                     if (this.Stats.Repair.Air.RT === this.Stats.Repair.Overall.RT && this.Stats.Repair.Air.getHP() < 100) this.Label.Repair.Air.setTextColor("black");
                                     
                                     window.report_combat_sim(this.TargetCity.get_Id(),
@@ -2309,6 +2354,39 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                             console.log("Error Sim Speed Change: " + e.toString());
                         }
                     },
+                    
+                    _redrawSimViews: function (value) {
+                        Simulator.StatWindow.getInstance().simViews = value;
+                        // Remove Simulations from Stats Window
+                        for (var i = (Simulator.StatWindow.getInstance().sim.length-1); i >= 0; i--) {
+                            if (i > (value-1)) {
+                                Simulator.StatWindow.getInstance().Battle.remove(Simulator.StatWindow.getInstance().sim[i].Label.Battle.container);
+                                Simulator.StatWindow.getInstance().EnemyHealth.remove(Simulator.StatWindow.getInstance().sim[i].Label.EnemyHealth.container);
+                                Simulator.StatWindow.getInstance().Repair.remove(Simulator.StatWindow.getInstance().sim[i].Label.Repair.container);
+                                Simulator.StatWindow.getInstance().Loot.remove(Simulator.StatWindow.getInstance().sim[i].Label.Loot.container);
+                                Simulator.StatWindow.getInstance().sim.pop();
+                            }
+                        }
+                        
+                        // Create and add Simulations to Stats Window
+                        for (var i = 0; i < value; i++) {
+                            if (i == Simulator.StatWindow.getInstance().sim.length) {
+                                Simulator.StatWindow.getInstance().sim.push(new (Simulator.StatWindow.getInstance()).Simulation(i));
+                                Simulator.StatWindow.getInstance().Battle.add(Simulator.StatWindow.getInstance().sim[i].Label.Battle.container, { flex : 1 });
+                                Simulator.StatWindow.getInstance().EnemyHealth.add(Simulator.StatWindow.getInstance().sim[i].Label.EnemyHealth.container, { flex : 1 });
+                                Simulator.StatWindow.getInstance().Repair.add(Simulator.StatWindow.getInstance().sim[i].Label.Repair.container, { flex : 1 });
+                                Simulator.StatWindow.getInstance().Loot.add(Simulator.StatWindow.getInstance().sim[i].Label.Loot.container, { flex : 1 });
+                                Simulator.StatWindow.getInstance().sim[i].Select(Simulator.StatWindow.getInstance().simSelected);
+                            }
+                        }
+                        
+                        if ((value-1) < Simulator.StatWindow.getInstance().simSelected) {
+                            Simulator.StatWindow.getInstance().simSelected = 0;
+                            for (var i = 0; i < Simulator.StatWindow.getInstance().sim.length; i++) {
+                                Simulator.StatWindow.getInstance().sim[i].Select(0);
+                            }
+                        }
+                    },
 
                     _onSimViewsChanged: function () {
                         try {
@@ -2316,37 +2394,7 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                             if (!isNaN(value)) {
                                 if (value > 0) {
                                     localStorage['simViews'] = value.toString();
-                                    Simulator.StatWindow.getInstance().simViews = value;
-
-                                    // Remove Simulations from Stats Window
-                                    for (var i = (Simulator.StatWindow.getInstance().sim.length-1); i >= 0; i--) {
-                                        if (i > (value-1)) {
-                                            Simulator.StatWindow.getInstance().Battle.remove(Simulator.StatWindow.getInstance().sim[i].Label.Battle.container);
-                                            Simulator.StatWindow.getInstance().EnemyHealth.remove(Simulator.StatWindow.getInstance().sim[i].Label.EnemyHealth.container);
-                                            Simulator.StatWindow.getInstance().Repair.remove(Simulator.StatWindow.getInstance().sim[i].Label.Repair.container);
-                                            Simulator.StatWindow.getInstance().Loot.remove(Simulator.StatWindow.getInstance().sim[i].Label.Loot.container);
-                                            Simulator.StatWindow.getInstance().sim.pop();
-                                        }
-                                    }
-
-                                    // Create and add Simulations to Stats Window
-                                    for (var i = 0; i < value; i++) {
-                                        if (i == Simulator.StatWindow.getInstance().sim.length) {
-                                            Simulator.StatWindow.getInstance().sim.push(new (Simulator.StatWindow.getInstance()).Simulation(i));
-                                            Simulator.StatWindow.getInstance().Battle.add(Simulator.StatWindow.getInstance().sim[i].Label.Battle.container, { flex : 1 });
-                                            Simulator.StatWindow.getInstance().EnemyHealth.add(Simulator.StatWindow.getInstance().sim[i].Label.EnemyHealth.container, { flex : 1 });
-                                            Simulator.StatWindow.getInstance().Repair.add(Simulator.StatWindow.getInstance().sim[i].Label.Repair.container, { flex : 1 });
-                                            Simulator.StatWindow.getInstance().Loot.add(Simulator.StatWindow.getInstance().sim[i].Label.Loot.container, { flex : 1 });
-                                            Simulator.StatWindow.getInstance().sim[i].Select(Simulator.StatWindow.getInstance().simSelected);
-                                        }
-                                    }
-
-                                    if ((value-1) < Simulator.StatWindow.getInstance().simSelected) {
-                                        Simulator.StatWindow.getInstance().simSelected = 0;
-                                        for (var i = 0; i < Simulator.StatWindow.getInstance().sim.length; i++) {
-                                            Simulator.StatWindow.getInstance().sim[i].Select(0);
-                                        }
-                                    }
+                                    this._redrawSimViews(value);
                                 }
                             }
                         } catch (e) {
