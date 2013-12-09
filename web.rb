@@ -16,5 +16,5 @@ get '/comsims/report/:target/:source' do
 end
 
 get '/comsims/get/:target/:source' do
-  CombatStat.where.not(:source => params[:source]).where(:target => params[:target]).to_json
+  CombatStat.where.not(:source => params[:source]).where(:target => params[:target]).group("target, source").order("id DESC").to_json
 end

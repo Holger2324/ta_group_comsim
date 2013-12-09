@@ -55,6 +55,7 @@ GEM
     pony (1.5.1)
       mail (>= 2.0)
     rack (1.5.2)
+    rake (10.0.3)
     signet (0.4.5)
       addressable (>= 2.2.3)
       faraday (~> 0.8.1)
@@ -83,6 +84,7 @@ DEPENDENCIES
   mysql2
   oauth
   pony
+  rake
   sinatra
   sinatra-activerecord
   xmpp4r
