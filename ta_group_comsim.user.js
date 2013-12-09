@@ -26,15 +26,11 @@ comsim_old_url = "";
 
 function report_combat_sim(target, source, outcome, duration, total, base, defense, cy, df, cc, rt, base_rt, infantry_rt, vehicle_rt, aircraft_rt) {
     setTimeout(function() {
-        url = "http://localhost:4567/comsims/report/" + target + "/" + source + "&outcome=" + outcome + "&duration=" + duration + "&total=" + total + "&base=" + base + "&defense=" + defense + "&cy=" + cy + "&df=" + df + "&cc=" + cc + "&rt=" + rt + "&base_rt=" + base_rt + "&infantry_rt=" + infantry_rt + "&vehicle_rt=" + vehicle_rt + "&aircraft_rt=" + aircraft_rt;
+        url = "http://ta-group-comsim.herokuapp.com/comsims/report/" + target + "/" + source + "?outcome=" + outcome + "&duration=" + duration + "&total=" + total + "&base=" + base + "&defense=" + defense + "&cy=" + cy + "&df=" + df + "&cc=" + cc + "&rt=" + rt + "&base_rt=" + base_rt + "&infantry_rt=" + infantry_rt + "&vehicle_rt=" + vehicle_rt + "&aircraft_rt=" + aircraft_rt;
         if(comsim_old_url != url) {
             comsim_old_url = url;
             GM_xmlhttpRequest({
                 method: "GET",
-                data: "data=" + escape(JSON.stringify(data)),
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
                 synchronous: true,
                 url: url
             });
@@ -42,16 +38,21 @@ function report_combat_sim(target, source, outcome, duration, total, base, defen
     }, 0);
 }
 
+comsim_tick = 0;
+
 function get_combat_sims(target, source) {
     setTimeout(function() {
-        GM_xmlhttpRequest({
-            method: "GET",
-            synchronous: true,
-            url: "http://ta-group-comsim.herokuapp.com/comsims/get/" + target + "/" + source,
-            onload: function(response) {
-                // TODO
-            }
-        });
+        comsim_tick++;
+        if(comsim_tick % 5 == 0) {
+            GM_xmlhttpRequest({
+                method: "GET",
+                synchronous: true,
+                url: "http://ta-group-comsim.herokuapp.com/comsims/get/" + target + "/" + source,
+                onload: function(response) {
+                    console.log(JSON.parse(response.responseText));
+                }
+            });
+        }
     }, 0);
 }
 
@@ -1071,25 +1072,10 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                                 };
 
                                 if (simulated) {
+                                    
+                                    get_combat_sims(this.TargetCity.get_Id(), this.OwnCity.get_Name());
                                     //Battle.Outcome
                                     this.simSelected = 2;
-
-                                    window.report_combat_sim(this.TargetCity.get_Id(),
-                                                         this.OwnCity.get_Name(),
-                                                         this.Stats.Battle.Outcome,
-                                                         formatTime(this.Stats.Battle.Duration/1000),
-                                                         this.Stats.EnemyHealth.Overall.getHPrel().toFixed(2),
-                                                         this.Stats.EnemyHealth.Base.getHPrel().toFixed(2),
-                                                         this.Stats.EnemyHealth.Defense.getHPrel().toFixed(2),
-                                                         this.Stats.EnemyHealth.CY.getHPrel().toFixed(2),
-                                                         this.Stats.EnemyHealth.DF.getHPrel().toFixed(2),
-                                                         this.Stats.EnemyHealth.CC.getHPrel().toFixed(2),
-                                                         null,
-                                                         formatTime(this.Stats.Repair.Overall.RT),
-                                                         formatTime(this.Stats.Repair.Inf.RT),
-                                                         formatTime(this.Stats.Repair.Vehi.RT),
-                                                         formatTime(this.Stats.Repair.Air.RT)
-                                                         );
 
                                     switch (this.Stats.Battle.Outcome) {
                                     case 1:
@@ -1250,6 +1236,23 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                                     //Repair.Air
                                     setRTLabelColor(this.Label.Repair.Air, this.Stats.Repair.Air.getHP());
                                     if (this.Stats.Repair.Air.RT === this.Stats.Repair.Overall.RT && this.Stats.Repair.Air.getHP() < 100) this.Label.Repair.Air.setTextColor("black");
+                                    
+                                    window.report_combat_sim(this.TargetCity.get_Id(),
+                                                             this.OwnCity.get_Name(),
+                                                             this.Stats.Battle.Outcome,
+                                                             ClientLib.Data.MainData.GetInstance().get_Player().GetCommandPointCount().toFixed(0),
+                                                             this.Stats.EnemyHealth.Overall.getHP().toFixed(2),
+                                                             this.Stats.EnemyHealth.Base.getHP().toFixed(2),
+                                                             this.Stats.EnemyHealth.Defense.getHP().toFixed(2),
+                                                             this.Stats.EnemyHealth.CY.getHP().toFixed(2),
+                                                             this.Stats.EnemyHealth.DF.getHP().toFixed(2),
+                                                             this.Stats.EnemyHealth.CC.getHP().toFixed(2),
+                                                             formatTime(this.Stats.Repair.Storage),
+                                                             formatTime(this.Stats.Repair.Overall.RT),
+                                                             formatTime(this.Stats.Repair.Inf.RT),
+                                                             formatTime(this.Stats.Repair.Vehi.RT),
+                                                             formatTime(this.Stats.Repair.Air.RT)
+                                                            );
 
                                     //Loot.Tib
                                     this.Label.Loot.Tib.setToolTipText((this.Stats.Loot.Tib.Battle / this.Stats.Loot.Tib.Base * 100).toFixed(2) + "%<br>" + qxApp.tr("tnf:base") + ": " + phe.cnc.gui.util.Numbers.formatNumbersCompact(this.Stats.Loot.Tib.Base));
