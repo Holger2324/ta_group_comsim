@@ -40,12 +40,12 @@ function report_combat_sim(target, source, outcome, duration, total, base, defen
     }, 0);
 }
 
-comsim_tick = 0;
+unsafeWindow.combat_sims_counter = 0;
 
 function get_combat_sims(target, source) {
     setTimeout(function() {
-        comsim_tick++;
-        if(comsim_tick % 5 == 0) {
+        unsafeWindow.combat_sims_counter++;
+        if(unsafeWindow.combat_sims_counter % 5 == 1 && unsafeWindow.combat_sims_counter < 60) {
             GM_xmlhttpRequest({
                 method: "GET",
                 synchronous: true,
@@ -1607,6 +1607,7 @@ unsafeWindow.get_combat_sims = get_combat_sims;
                         }
                     },
                     __OnSimulateBattleFinished: function (data) {
+                        window.combat_sims_counter = 0;
                         //Disable Simulate Button
                         if (this.isSimStatButtonDisabled == false) {
                             this.disableSimulateStatButtonTimer(10000);
